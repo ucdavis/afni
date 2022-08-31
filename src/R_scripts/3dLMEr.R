@@ -353,6 +353,12 @@ read.LME.opts.batch <- function (args=NULL, verb = 0) {
    "         up the program significantly.",
    "         Choose 1 for a single-processor computer.\n", sep = '\n'
                      ) ),
+      
+      '-clusterType' = apl(n=1, d = "SOCK", h = paste(
+   "-clusterType TYPE: If using multi-processing, which type of cluster configuration ",
+   "         to use. The default, SOCK, will use multiple processors on a single machine.",
+   "         Use 'MPI' to distribute jobs across multiple nodes; requires the Rmpi library.\n", sep = '\n'
+                     ) ),
 
       '-IF' = apl(n = 1, d = NA,  h = paste(
    "-IF var_name: var_name is used to specify the column name that is designated for",
@@ -545,6 +551,7 @@ read.LME.opts.batch <- function (args=NULL, verb = 0) {
       com_history<-AFNI.command.history(ExecName, args,NULL)
       lop <- list (com_history = com_history)
       lop$nNodes <- 1
+      lop$clusterType <- 'SOCK'
       lop$cutoff <- 0
       #lop$fixEff  <- 1
       lop$maskFN <- NA
@@ -576,6 +583,7 @@ read.LME.opts.batch <- function (args=NULL, verb = 0) {
              resid  = lop$resid  <- pprefix.AFNI.name(ops[[i]]),
              mask   = lop$maskFN <- ops[[i]],
              jobs   = lop$nNodes <- ops[[i]],
+             clusterType = lop$clusterType <- ops[[i]],
 	     model  = lop$model  <- ops[[i]],
 	     IF     = lop$IF     <- ops[[i]],
 	     #num_glt   = lop$num_glt   <- ops[[i]],
@@ -1144,7 +1152,7 @@ if(lop$TRR) { # test-retest analysis
          } #  for(kk in 1:nSeg)
       } else { # parallelization
          pkgLoad('snow')
-         cl <- makeCluster(lop$nNodes, type = "SOCK")
+         cl <- makeCluster(lop$nNodes, type = lop$clusterType)
          clusterExport(cl, "z2r", envir=environment())
          clusterEvalQ(cl, library(lme4))
          clusterEvalQ(cl, options(contrasts = c("contr.sum", "contr.poly")))
@@ -1168,7 +1176,7 @@ if(lop$TRR) { # test-retest analysis
          } 
       } else {
          pkgLoad('snow')
-         cl <- makeCluster(lop$nNodes, type = "SOCK")
+         cl <- makeCluster(lop$nNodes, type = lop$clusterType)
          clusterExport(cl, "lop", envir=environment())
          clusterEvalQ(cl, library(lmerTest)); clusterEvalQ(cl, library(phia))
          clusterEvalQ(cl, options(contrasts = c("contr.sum", "contr.poly")))
@@ -1204,7 +1212,7 @@ if(lop$TRR) { # test-retest analysis
       
       if (lop$nNodes>1) {
          pkgLoad('snow')
-         cl <- makeCluster(lop$nNodes, type = "SOCK")
+         cl <- makeCluster(lop$nNodes, type = lop$clusterType)
          clusterExport(cl, c("lop", "assVV2"), envir=environment())
          clusterEvalQ(cl, library(lmerTest)); clusterEvalQ(cl, library(phia))
          clusterEvalQ(cl, options(contrasts = c("contr.sum", "contr.poly")))
@@ -1229,7 +1237,7 @@ if(lop$TRR) { # test-retest analysis
          }
       } else {
          pkgLoad('snow')
-         cl <- makeCluster(lop$nNodes, type = "SOCK")
+         cl <- makeCluster(lop$nNodes, type = lop$clusterType)
          clusterExport(cl, c("lop", "assVV2"), envir=environment())
          clusterEvalQ(cl, library(lmerTest)); clusterEvalQ(cl, library(phia))
          clusterEvalQ(cl, options(contrasts = c("contr.sum", "contr.poly")))
